@@ -1,0 +1,23 @@
+{
+    "Variables" : ["A", "B", "C"],
+
+    "Constraints" : [
+            {
+                "function" : "Equal",
+                "elem1" : "A",
+                "elem2" : "B"
+            },
+
+            {
+                "function" : "LessThan",
+                "elem1" : "A",
+                "elem2" : "C"
+            }
+
+        ],
+    
+    "Domain" : {
+        "min" : 1,
+        "max" : 4
+    }
+}
