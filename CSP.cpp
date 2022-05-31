@@ -3,21 +3,21 @@
 #include <iostream>     
 #include <cmath>          
 #include <map>  
-#include "JsonParser.cpp"
+#include "JsonParser.h"
+#include "Comparitor.cpp"
 
 using namespace std;
 
-// Node struct for storage of the values of variables, the order is always as follows:
-// A B C D E F G H
-// 0 1 2 3 4 5 6 7
+// Node struct for storage of the values of variables
 struct Node {
-    map<std::string, int> vars;
+    map<string, int> vars;
 };
 
-std::stack<Node*> myStack;
+//stack for DFS search
+stack<Node*> myStack;
 
 // array that stores the variable ordering
-std::vector<std::string> orderMap;
+vector<string> orderMap;
 
 //Json Parser
 JsonParser* parser;
@@ -29,16 +29,8 @@ int minD = 0;
 int pruned = 0;
 // solution count
 int solutions = 0;
- 
-bool lt(int a, int b) {return a < b;}
-bool eq(int a, int b) {return a == b;}
 
-map<std::string, bool (*)(int, int)> fn;
- 
-void initFunction() {
-    fn["LessThan"] = &lt;
-    fn["Equal"] = &eq;
-}  
+map<string, bool (*)(int, int)> fn;
 
 // check if world(node) is consistent
 bool isConsistent(Node& node) {
@@ -69,63 +61,59 @@ string getNext(Node* node) {
 //prints the values of the node
 void printNode(Node& node) {
     for (auto& pair: node.vars) {
-        std::cout << pair.first << ": " << pair.second << " ";
+        cout << pair.first << ": " << pair.second << " ";
     }
-    std::cout << std::endl;
+    cout << endl;
 } 
 
 void printOrdering() {
     cout << "ordering: ";
     for (string elem : orderMap) {
-        std::cout << elem << " ";
+        cout << elem << " ";
     }
-    std::cout << std::endl;
+    cout << endl;
 }
 
 // Depth first search function using a stack
 void DFS() {
+    while (!myStack.empty()) {
+        Node* node = myStack.top();
+        myStack.pop();
+
+        if (isConsistent(*node)) {
+            bool done = true;
+            // check if variable array is full, if yes, then a solution has been found
+            for (auto& pair: node->vars) {
+                done = (pair.second != 0);
+                if (!done) break;
+            }
+            if (done) {
+                cout << "solution: ";
+                printNode(*node);
+                solutions++;
+                continue;
+            }
+
+            //cout << "failure: ";
+            //printNode(*node);
+
+            string nextToAnalyze = getNext(node);
+
+            //generate neighbors and add them to the stack
+            for (int i = maxD; i >= minD; i--) {
+                Node* subNode = new Node();
+                map<string, int> subMap(node->vars);
+                subNode->vars = subMap;
+                subNode->vars[nextToAnalyze] = i;
+                myStack.push(subNode);
+            }
+
+        } else {
+            //increment prune count
+            pruned++;
+        } 
+    }
     
-    if (myStack.empty()) return;
-    Node* node = myStack.top();
-    myStack.pop();
-
-    if (isConsistent(*node)) {
-        bool done = true;
-        // check if variable array is full, if yes, then a solution has been found
-        for (auto& pair: node->vars) {
-            done = (pair.second != 0);
-            if (!done) break;
-        }
-        if (done) {
-            std::cout << "solution: ";
-            printNode(*node);
-            solutions++;
-            DFS();
-            return;
-        }
-        
-        //std::cout << "failure: ";
-        //printNode(*node);
-
-        string nextToAnalyze = getNext(node);
-        
-        //generate neighbors and add them to the stack
-        for (int i = maxD; i >= minD; i--) {
-            Node* subNode = new Node();
-            map<string, int> subMap(node->vars);
-            subNode->vars = subMap;
-            subNode->vars[nextToAnalyze] = i;
-            myStack.push(subNode);
-        }
-
-        //search neighbors
-        DFS();
-
-    } else {
-        //increment prune count
-        pruned++;
-        DFS();
-    } 
     
 }
  
